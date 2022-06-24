@@ -18,7 +18,6 @@ services:
       - --log
       - --api
       - --api.dashboard=true
-      # - --entryPoints.schemas.address=:5432
       - --entryPoints.http.address=:80
     labels:
       - traefik.enable=true
@@ -36,12 +35,6 @@ services:
       - .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
-    labels:
-      - traefik.enable=true
-      - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
-      - traefik.tcp.services.${STACK_NAME?Variable not set}-db.loadbalancer.server.port=5432
-      - traefik.tcp.routers.${STACK_NAME?Variable not set}-db-tcp.rule=HostSNI(`*`)
-      - traefik.tcp.routers.${STACK_NAME?Variable not set}-db-tcp.entrypoints=database
 
 
   backend:
