@@ -12,7 +12,7 @@ from app.services.data_process import get_order_prices
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 def read_order_prices(db: Session = Depends(deps.get_db)) -> Any:
     """
     Returns a list of orders with precalculated total amount

@@ -12,7 +12,7 @@ from app.services.data_process import get_product_customers
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 def read_product_customers(db: Session = Depends(deps.get_db)) -> Any:
     """
     Returns a list of product id with a list of customers which have bought that product

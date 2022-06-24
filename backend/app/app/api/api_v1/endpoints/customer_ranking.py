@@ -12,7 +12,7 @@ from app.services.data_process import get_customer_ranking
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 def read_customer_ranking(db: Session = Depends(deps.get_db)) -> Any:
     """
     Returns a list of customers, ordered by how much have they spent
