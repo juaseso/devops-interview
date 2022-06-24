@@ -26,10 +26,6 @@ services:
       - traefik.constraint-label=${TRAEFIK_TAG?Variable not set}
       - traefik.http.routers.${STACK_NAME?Variable not set}-proxy-http.entrypoints=http
       - traefik.http.services.${STACK_NAME?Variable not set}-proxy.loadbalancer.server.port=80
-  #      - traefik.http.routers.dashboard.rule=Host(`${DOMAIN?Variable not set}`) && PathPrefix(`/dashboard`))
-  #      - traefik.http.routers.dashboard.service=api@internal
-  #      - traefik.http.routers.dashboard.middlewares=auth
-  #      - traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$05$$QKa5uKBK1ZF5z9fKLx5isOZHFOreccPKj/VkwgCaw3vzPVk4NJnne
 
 
   db:
@@ -72,6 +68,8 @@ services:
 
   frontend:
     image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
+    depends_on:
+      - proxy
     build:
       context: frontend
     environment:
@@ -82,8 +80,6 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=PathPrefix(`/`)
       - traefik.http.services.${STACK_NAME?Variable not set}-frontend.loadbalancer.server.port=80
 
-volumes:
-  app-db-data:
 
 networks:
   traefik-public:
