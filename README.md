@@ -42,3 +42,53 @@ To evaluate our customers, we need a `customer_ranking.csv` containing the follo
 * `firstname` customer first name
 * `lastname` customer last name
 * `total_euros` total euros this customer has spent on products
+
+# Solution
+As a solution provided, I have opted to do a web application. 
+<img src="img_1.png" width="900">
+
+The solution is composed by 4 components, each of them running on a separate container and properly isolated 
+* Frontend
+* Backend
+* Proxy
+* Database
+
+## How to get the project up and running
+### Prerequisites
+* Docker
+* Docker-compose
+
+### Step 1
+First, make sure that the docker engine is running.  
+Then, move to the repository root and execute the following command to get up the project: `docker-compose up -d`  
+The first execution will attempt to find the images and, when it fails, it will build them, so it will take a while.
+
+### Step 2
+When the images are built, we must make sure that all the containers are running. With `docker ps` we should see something similar to the following output:
+![img_2.png](img_2.png)
+
+If not, just launch again the above command (`docker-compose up -d`)
+
+Once the project is up with the four containers in Up status, we can go to the browser and open [http://localhost](http://localhost)  
+
+We should see the index page, with the three cards in the middle of the screen. 
+<img src="img_1.png" width="900">
+
+
+## How does it work
+Every link of the cards at the index (as well as the header links) leads to the respectively page of the task.  
+In each page, you will be able to see a table with the results of the data process as well as a link to download a csv file version of the results, as indicated in the tasks.
+
+
+## Interesting code locations
+### Data processing
+The code in charge of transformate data to serve to the requests: 
+`backend/app/app/services/data_process.py`
+
+### CSV loaders
+This code is executed at an early stage of the boot, launched by an internal script in the docker image.  
+It makes possible to have a fresh data set on every reboot of the application.
+`backend/app/app/db/init_db.py`
+
+### Infrastructure configuration
+The `docker-compose.yml` file is in charge of configuring the infrastructure. 
