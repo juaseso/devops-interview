@@ -10,8 +10,6 @@ class Settings(BaseSettings):
     SERVER_NAME: str
     SERVER_HOST: AnyHttpUrl
 
-    # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
-    # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
@@ -41,11 +39,6 @@ class Settings(BaseSettings):
             host=values.get("POSTGRES_SERVER"),
             path=f"/{values.get('POSTGRES_DB') or ''}",
         )
-
-    FIRST_SUPERUSER_FULLNAME: str = 'Administrador'
-    FIRST_SUPERUSER: str
-    FIRST_SUPERUSER_PASSWORD: str
-    USERS_OPEN_REGISTRATION: bool = False
 
     class Config:
         case_sensitive = True
