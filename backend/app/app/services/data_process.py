@@ -14,7 +14,7 @@ def get_order_prices(db: Session):
     euros the total cost of the order
     """
     prices_cache = {}
-    order_prices = {}
+    order_prices = []
 
     products = crud.product.get_multi(db=db)
     orders = crud.order.get_multi(db=db)
@@ -23,8 +23,12 @@ def get_order_prices(db: Session):
         prices_cache[str(product.id)] = product.cost
 
     for order in orders:
-        order_prices[order.id] = reduce(lambda a, b: a + b,
-                                        list(prices_cache[product_id] for product_id in order.products.split()))
+        order_prices.append(
+            {'id': order.id,
+             'euros': reduce(lambda a, b: a + b,
+                             list(prices_cache[product_id] for product_id in order.products.split()))
+             }
+        )
 
     return order_prices
 
@@ -51,10 +55,14 @@ def get_product_customers(db: Session):
         list(map(lambda product__id: product_customers[str(product__id)].add(str(order.customer)),
                  order.products.split()))
 
+    result = []
     for product_id in product_customers.keys():
-        product_customers[str(product_id)] = ' '.join(product_customers[str(product_id)])
+        result.append({
+            'id': product_id,
+            'customer_ids': ' '.join(product_customers[str(product_id)])
+        })
 
-    return product_customers
+    return result
 
 
 def get_customer_ranking(db: Session):
