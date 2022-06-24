@@ -1,0 +1,91 @@
+version: "3.7"
+services:
+
+  proxy:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+    networks:
+      - ${TRAEFIK_PUBLIC_NETWORK?Variable not set}
+      - default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - --providers.docker
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`, `${TRAEFIK_TAG?Variable not set}`)
+      - --providers.docker.exposedbydefault=false
+      - --accesslog
+      - --log
+      - --api
+      - --api.dashboard=true
+      # - --entryPoints.schemas.address=:5432
+      - --entryPoints.http.address=:80
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_PUBLIC_NETWORK?Variable not set}
+      - traefik.constraint-label=${TRAEFIK_TAG?Variable not set}
+      - traefik.http.routers.${STACK_NAME?Variable not set}-proxy-http.entrypoints=http
+      - traefik.http.services.${STACK_NAME?Variable not set}-proxy.loadbalancer.server.port=80
+  #      - traefik.http.routers.dashboard.rule=Host(`${DOMAIN?Variable not set}`) && PathPrefix(`/dashboard`))
+  #      - traefik.http.routers.dashboard.service=api@internal
+  #      - traefik.http.routers.dashboard.middlewares=auth
+  #      - traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$05$$QKa5uKBK1ZF5z9fKLx5isOZHFOreccPKj/VkwgCaw3vzPVk4NJnne
+
+
+  db:
+    image: postgres:12
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
+      - traefik.tcp.services.${STACK_NAME?Variable not set}-db.loadbalancer.server.port=5432
+      - traefik.tcp.routers.${STACK_NAME?Variable not set}-db-tcp.rule=HostSNI(`*`)
+      - traefik.tcp.routers.${STACK_NAME?Variable not set}-db-tcp.entrypoints=database
+
+
+  backend:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    depends_on:
+      - db
+      - proxy
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=${DOMAIN?Variable not set}
+      - SERVER_HOST=https://${DOMAIN?Variable not set}
+    build:
+      context: backend
+      dockerfile: backend.dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)
+      - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=80
+  
+
+#  frontend:
+#    image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
+#    build:
+#      context: frontend
+#      args:
+#        FRONTEND_ENV: ${FRONTEND_ENV-production}
+#    labels:
+#      - traefik.enable=true
+#      - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
+#      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=PathPrefix(`/`)
+#      - traefik.http.services.${STACK_NAME?Variable not set}-frontend.loadbalancer.server.port=80
+
+volumes:
+  app-db-data:
+
+networks:
+  traefik-public:
+    # Allow setting it to false for testing
+    external: ${TRAEFIK_PUBLIC_NETWORK_IS_EXTERNAL-true}
